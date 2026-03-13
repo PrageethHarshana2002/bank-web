@@ -1,0 +1,46 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Environment variables
+.env
+.env.*
+.env.local
+
+# Server temporary files
+server/check_pinecone.js
+server/debug_rag.js
+server/find_768.js
+server/list_models.js
+server/list_models_v1.js
+server/test_conn.js
+server/test_dim.js
+server/test_dim_2.js
+server/test_gen_raw.js
+server/test_output_dim.js
+server/test_output_dim_gemini.js
+server/test_raw_dim.js
+server/test_v1_raw.js
+server/test_v1beta_dim.js
+server/verify_final.js
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
