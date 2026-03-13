@@ -46,6 +46,9 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 5000;
 
+// Simple in-memory storage for chat history
+const chatHistories = {};
+
 // Initialize Pinecone
 const pc = new Pinecone({
     apiKey: process.env.PINECONE_API_KEY,
@@ -75,12 +78,22 @@ async function initRAG() {
 
 
 
-    const systemPrompt = `You are Aruni, a senior loan advisor. You are warm, professional, and empathetic. 
-Use the provided bank data context to answer questions. If you don't know the answer, ask them to visit a branch.
-Speak politely in English, Sinhala, or Tamil based on the user's message.
+    const systemPrompt = `You are Aruni, a senior loan advisor at TrustBank. 
+Your tone is warm, professional, and empathetic. 
 
-Context: 
-{context}`;
+GREETING RULES:
+1. If "Chat History" is EMPTY: You may introduce yourself once ("I am Aruni") and offer a warm greeting.
+2. If "Chat History" HAS CONTENT: You ALREADY introduced yourself. DO NOT say "Hi", "Hello", "I am Aruni", or "How can I help you" again. Jump straight to answering the user's latest question.
+
+GENERAL RULES:
+1. Only provide detailed tables or lists if specifically asked for detailed loan data.
+2. Speak politely in English, Sinhala, or Tamil as per the user's preference.
+
+Conversation Context:
+{context}
+
+Chat History:
+{chat_history}`;
 
     const prompt = ChatPromptTemplate.fromMessages([
         ["system", systemPrompt],
@@ -91,16 +104,18 @@ Context:
 
     const chain = RunnableSequence.from([
         {
-            context: retriever.pipe((docs) => {
+            context: (input) => retriever.invoke(input.input).then((docs) => {
                 console.log(`Retrieved ${docs.length} documents for context`);
                 return docs.map((d) => d.pageContent).join("\n\n");
             }),
-            input: new RunnablePassthrough(),
+            chat_history: (x) => x.chat_history,
+            input: (x) => x.input,
         },
         prompt,
         model,
         new StringOutputParser(),
     ]);
+
 
     return chain;
 }
@@ -114,16 +129,42 @@ initRAG().then(chain => {
 });
 
 app.post('/chat', async (req, res) => {
+    // For simplicity, using 'default' session. In production, use session IDs from headers/cookies.
+    const sessionId = req.headers['x-session-id'] || 'default-session';
     const { message } = req.body;
-    console.log(`Received message: "${message}"`);
+
+    console.log(`Received message from ${sessionId}: "${message}"`);
 
     if (!ragChain) {
         return res.status(503).json({ error: "Service is still initializing" });
     }
 
+    // Initialize or get history
+    if (!chatHistories[sessionId]) {
+        chatHistories[sessionId] = [];
+    }
+
     try {
-        const response = await ragChain.invoke(message);
+        // Format history for prompt
+        const historyString = chatHistories[sessionId]
+            .map(m => `${m.sender}: ${m.text}`)
+            .join("\n");
+
+        const response = await ragChain.invoke({
+            input: message,
+            chat_history: historyString
+        });
+
         console.log("Chain invoked successfully");
+
+        // Update history (keep last 10 messages: 5 user + 5 AI)
+        chatHistories[sessionId].push({ sender: 'User', text: message });
+        chatHistories[sessionId].push({ sender: 'Aruni', text: response });
+
+        if (chatHistories[sessionId].length > 10) {
+            chatHistories[sessionId] = chatHistories[sessionId].slice(-10);
+        }
+
         res.json({ response });
     } catch (error) {
         console.error("Chat error details:", {
