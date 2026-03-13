@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import Markdown from 'react-markdown';
 import TypingAnimation from './TypingAnimation';
 
 interface Message {
@@ -65,7 +66,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping, onToggleTypi
 
             const data = await response.json();
 
-
             const aiMessage: Message = {
                 id: (Date.now() + 1).toString(),
                 text: data.response,
@@ -86,7 +86,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping, onToggleTypi
         } finally {
             setIsLoading(false);
         }
-
     };
 
     return (
@@ -134,7 +133,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping, onToggleTypi
                             ? 'bg-trust-blue text-white rounded-tr-none border-trust-blue'
                             : 'bg-white text-gray-800 rounded-tl-none border-gray-100'
                             }`}>
-                            <p className="text-sm">{msg.text}</p>
+                            <div className="text-sm prose-sm">
+                                <Markdown
+                                    components={{
+                                        p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                                        strong: ({ children }) => <span className="font-bold text-trust-blue/90">{children}</span>,
+                                        ul: ({ children }) => <ul className="list-disc ml-4 mb-2">{children}</ul>,
+                                        ol: ({ children }) => <ol className="list-decimal ml-4 mb-2">{children}</ol>,
+                                        li: ({ children }) => <li className="mb-1">{children}</li>,
+                                    }}
+                                >
+                                    {msg.text}
+                                </Markdown>
+                            </div>
                             <span className={`text-[10px] mt-1 block ${msg.sender === 'user' ? 'text-blue-200' : 'text-gray-400'}`}>
                                 {msg.timestamp}
                             </span>
