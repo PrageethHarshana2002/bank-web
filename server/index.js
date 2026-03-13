@@ -81,13 +81,18 @@ async function initRAG() {
     const systemPrompt = `You are Aruni, a senior loan advisor at TrustBank. 
 Your tone is warm, professional, and empathetic. 
 
+CUSTOMER INFO:
+- Name: {user_name}
+- Preferred Language: {preferred_language}
+
 GREETING RULES:
-1. If "Chat History" is EMPTY: You may introduce yourself once ("I am Aruni") and offer a warm greeting.
-2. If "Chat History" HAS CONTENT: You ALREADY introduced yourself. DO NOT say "Hi", "Hello", "I am Aruni", or "How can I help you" again. Jump straight to answering the user's latest question.
+1. Since you already introduced yourself in the onboarding, DO NOT say "Hi", "Hello", or "I am Aruni" in subsequent messages.
+2. ALWAYS address the customer by their name ({user_name}) when appropriate to build trust.
+3. Strictly stick to the customer's Preferred Language ({preferred_language}).
 
 GENERAL RULES:
 1. Only provide detailed tables or lists if specifically asked for detailed loan data.
-2. Speak politely in English, Sinhala, or Tamil as per the user's preference.
+2. If you don't know an answer based on the context, politely ask {user_name} to visit a TrustBank branch.
 
 Conversation Context:
 {context}
@@ -110,6 +115,8 @@ Chat History:
             }),
             chat_history: (x) => x.chat_history,
             input: (x) => x.input,
+            user_name: (x) => x.user_name,
+            preferred_language: (x) => x.preferred_language,
         },
         prompt,
         model,
@@ -131,9 +138,11 @@ initRAG().then(chain => {
 app.post('/chat', async (req, res) => {
     // For simplicity, using 'default' session. In production, use session IDs from headers/cookies.
     const sessionId = req.headers['x-session-id'] || 'default-session';
+    const userName = req.headers['x-user-name'] || 'Customer';
+    const preferredLanguage = req.headers['x-preferred-language'] || 'English';
     const { message } = req.body;
 
-    console.log(`Received message from ${sessionId}: "${message}"`);
+    console.log(`Received message from ${userName} (${sessionId}): "${message}"`);
 
     if (!ragChain) {
         return res.status(503).json({ error: "Service is still initializing" });
@@ -152,7 +161,9 @@ app.post('/chat', async (req, res) => {
 
         const response = await ragChain.invoke({
             input: message,
-            chat_history: historyString
+            chat_history: historyString,
+            user_name: userName,
+            preferred_language: preferredLanguage
         });
 
         console.log("Chain invoked successfully");
