@@ -17,7 +17,7 @@ interface ChatWindowProps {
     onToggleTyping: () => void;
 }
 
-const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping, onToggleTyping }) => {
+const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping }) => {
     const [inputValue, setInputValue] = useState('');
     const [onboardingStep, setOnboardingStep] = useState<'name' | 'language' | 'completed'>('name');
     const [userName, setUserName] = useState('');
@@ -83,7 +83,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping, onToggleTypi
         setIsLoading(true);
 
         try {
-            const response = await fetch('http://127.0.0.1:5000/chat', {
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:5000';
+            const response = await fetch(`${backendUrl}/chat`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

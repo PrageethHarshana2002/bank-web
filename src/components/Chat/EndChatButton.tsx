@@ -12,7 +12,8 @@ const EndChatButton: React.FC<EndChatProps> = ({
     const handleEndChat = async () => {
         setIsEnding(true);
         try {
-            const response = await fetch('http://127.0.0.1:5000/end-session', {
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:5000';
+            const response = await fetch(`${backendUrl}/end-session`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
