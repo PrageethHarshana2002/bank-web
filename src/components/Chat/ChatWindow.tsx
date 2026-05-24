@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Markdown from 'react-markdown';
 import TypingAnimation from './TypingAnimation';
+import EndChatButton from './EndChatButton';
+import EmojiPicker from 'emoji-picker-react';
 
 interface Message {
     id: string;
@@ -10,7 +12,7 @@ interface Message {
 }
 
 interface ChatWindowProps {
-    onClose: () => void;
+    onClose?: () => void;
     isTyping: boolean;
     onToggleTyping: () => void;
 }
@@ -23,7 +25,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping, onToggleTypi
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const onEmojiClick = (emojiObject: any) => {
+        setInputValue(prevInput => prevInput + emojiObject.emoji);
+    };
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -102,10 +109,20 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping, onToggleTypi
 
             setMessages(prev => [...prev, aiMessage]);
         } catch (error: any) {
-            console.error("Failed to send message:", error);
+            console.error("Detailed Chat Error:", error);
+            
+            let userFriendlyMessage = "I'm sorry, I'm experiencing a temporary connection issue. Please try again in a moment. 🔌";
+            
+            // Check if it's a quota/rate limit error
+            if (error.message && (error.message.includes("limit") || error.message.includes("429") || error.message.includes("Quota"))) {
+                userFriendlyMessage = "I'm experiencing a bit of high traffic right now and need a short break. Please try asking me again in a minute! ⏳";
+            } else if (error.message && error.message.includes("503")) {
+                userFriendlyMessage = "I am still waking up! Please give me a few seconds and try again. 🌅";
+            }
+
             const aiMessage: Message = {
                 id: (Date.now() + 1).toString(),
-                text: `[Error] ${error.message || "Unknown connection error"}. Please check if the backend is running at http://127.0.0.1:5000.`,
+                text: userFriendlyMessage,
                 sender: 'ai',
                 timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             };
@@ -135,11 +152,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping, onToggleTypi
                     </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                    <button onClick={onClose} className="text-blue-100 hover:text-white transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
+                    {onboardingStep === 'completed' && <EndChatButton sessionId="default-session" />}
+                    {onClose && (
+                        <button onClick={onClose} className="text-blue-100 hover:text-white transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -240,30 +260,47 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping, onToggleTypi
 
             {/* Input Field (Only visible when onboarding is done) */}
             {onboardingStep === 'completed' && (
-                <form
-                    onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-                    className="p-4 bg-white border-t border-gray-100"
-                >
-                    <div className="relative flex items-center">
-                        <input
-                            type="text"
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                            disabled={isLoading}
-                            placeholder="Type your message..."
-                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 pr-12 focus:outline-none focus:border-trust-gold focus:ring-1 focus:ring-trust-gold transition-all text-sm disabled:opacity-50"
-                        />
-                        <button
-                            type="submit"
-                            disabled={isLoading || !inputValue.trim()}
-                            className="absolute right-2 p-2 text-trust-blue hover:text-trust-gold transition-colors disabled:opacity-50"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                            </svg>
-                        </button>
-                    </div>
-                </form>
+                <div className="relative">
+                    {showEmojiPicker && (
+                        <div className="absolute bottom-full right-0 mb-2 z-50">
+                            <EmojiPicker onEmojiClick={onEmojiClick} width={300} height={400} />
+                        </div>
+                    )}
+                    <form
+                        onSubmit={(e) => { e.preventDefault(); handleSend(); setShowEmojiPicker(false); }}
+                        className="p-4 bg-white border-t border-gray-100"
+                    >
+                        <div className="relative flex items-center">
+                            <button
+                                type="button"
+                                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                className="absolute left-2 p-2 text-gray-400 hover:text-trust-gold transition-colors z-10"
+                                title="Add Emoji"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </button>
+                            <input
+                                type="text"
+                                value={inputValue}
+                                onChange={(e) => setInputValue(e.target.value)}
+                                disabled={isLoading}
+                                placeholder="Type your message..."
+                                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-12 py-3 focus:outline-none focus:border-trust-gold focus:ring-1 focus:ring-trust-gold transition-all text-sm disabled:opacity-50"
+                            />
+                            <button
+                                type="submit"
+                                disabled={isLoading || !inputValue.trim()}
+                                className="absolute right-2 p-2 text-trust-blue hover:text-trust-gold transition-colors disabled:opacity-50"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                </svg>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             )}
         </div>
     );

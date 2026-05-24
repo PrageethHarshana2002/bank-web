@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "node --dns-result-order=ipv4first index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -15,6 +16,7 @@
     "@langchain/google-genai": "^2.1.24",
     "@langchain/pinecone": "^1.0.1",
     "@pinecone-database/pinecone": "^7.1.0",
+    "axios": "^1.13.6",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",

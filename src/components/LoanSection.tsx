@@ -1,80 +1,122 @@
 import React from 'react';
 
-interface LoanCardProps {
-    title: string;
-    description: string;
-    icon: React.ReactNode;
+interface BankCardProps {
+    name: string;
+    rate: string;
+    maxAmount: string;
+    maxTenure: string;
+    features: string;
 }
 
-const LoanCard: React.FC<LoanCardProps> = ({ title, description, icon }) => {
+const BankCard: React.FC<BankCardProps> = ({ name, rate, maxAmount, maxTenure, features }) => {
     return (
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 group">
-            <div className="w-14 h-14 bg-blue-50 rounded-xl flex items-center justify-center text-trust-blue mb-6 group-hover:bg-trust-blue group-hover:text-white transition-colors duration-300">
-                {icon}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300">
+            <h3 className="text-xl font-bold text-trust-blue mb-4">{name}</h3>
+            <div className="space-y-3 mb-6">
+                <div className="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
+                    <span className="text-gray-500">Rate (p.a.)</span>
+                    <span className="font-semibold text-gray-800 text-right">{rate}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
+                    <span className="text-gray-500">Max Amount</span>
+                    <span className="font-semibold text-gray-800 text-right">{maxAmount}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
+                    <span className="text-gray-500">Max Tenure</span>
+                    <span className="font-semibold text-gray-800 text-right">{maxTenure}</span>
+                </div>
             </div>
-            <h3 className="text-xl font-bold text-trust-blue mb-3">{title}</h3>
-            <p className="text-gray-600 mb-6 leading-relaxed">
-                {description}
-            </p>
-            <a href="#" className="inline-flex items-center text-trust-gold font-semibold hover:text-trust-blue transition-colors">
-                Learn More
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-            </a>
+            <div className="pt-2">
+                <p className="text-sm text-gray-600 leading-relaxed">
+                    <span className="font-semibold text-trust-gold block mb-1">Key Features:</span>
+                    {features}
+                </p>
+            </div>
         </div>
     );
 };
 
-const LoanSection: React.FC = () => {
-    const loans = [
+const SupportedBanksSection: React.FC = () => {
+    const banks = [
         {
-            title: 'Housing Loans',
-            description: 'Flexible mortgage solutions with AI-powered rate optimization to help you secure your dream home with ease.',
-            icon: (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-            )
+            name: 'Bank of Ceylon (BOC)',
+            rate: '~11-14%',
+            maxAmount: 'LKR 10 million',
+            maxTenure: '7 years',
+            features: 'Govt. employee preferential rates; 1-2 guarantors'
         },
         {
-            title: 'Personal Loans',
-            description: 'Quick approval personal loans for your immediate needs, featuring transparent terms and ethical interest calculations.',
-            icon: (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-            )
+            name: "People's Bank",
+            rate: '~11-14%',
+            maxAmount: 'LKR 15 million',
+            maxTenure: '10 years',
+            features: 'Longest tenure; salary assignment required; best for govt sector'
         },
         {
-            title: 'SME Loans',
-            description: 'Empowering small and medium enterprises with scalable financial support designed to fuel business growth.',
-            icon: (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-            )
+            name: 'Commercial Bank',
+            rate: '~13-16%',
+            maxAmount: 'LKR 10 million',
+            maxTenure: '5 years',
+            features: 'Fast digital approval; no guarantor required'
+        },
+        {
+            name: 'HNB',
+            rate: '~13-16%',
+            maxAmount: 'LKR 10 million',
+            maxTenure: '5 years',
+            features: 'HNB Solo app; insurance-linked products'
+        },
+        {
+            name: 'Sampath Bank',
+            rate: '~13.5-20%',
+            maxAmount: 'LKR 10 million',
+            maxTenure: '7 years',
+            features: 'No collateral; 1% processing fee; fully unsecured'
+        },
+        {
+            name: 'NSB',
+            rate: '~11-12.5%',
+            maxAmount: 'LKR 5 million',
+            maxTenure: '7 years',
+            features: 'Lowest rates overall; fee waived for salary account holders'
+        },
+        {
+            name: 'DFCC Bank',
+            rate: '~14-17%',
+            maxAmount: 'LKR 10 million',
+            maxTenure: '5 years',
+            features: 'Strong digital platform; fast processing'
+        },
+        {
+            name: 'Seylan Bank',
+            rate: '~11.5-17.5%',
+            maxAmount: 'LKR 10 million',
+            maxTenure: '7 years',
+            features: 'Wide rate range by credit profile; mandatory credit life insurance'
         }
     ];
 
     return (
-        <section className="py-24 bg-gray-50/50">
+        <section id="supported-banks" className="py-24 bg-gray-50/50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-16">
-                    <h2 className="text-3xl font-bold text-trust-blue sm:text-4xl">Our Loan Products</h2>
+                    <h2 className="text-3xl font-bold text-trust-blue sm:text-4xl">Supported Banks</h2>
                     <div className="w-20 h-1.5 bg-trust-gold mx-auto mt-4 rounded-full"></div>
                     <p className="mt-4 text-gray-500 max-w-2xl mx-auto text-lg">
-                        Discover a range of financial products tailored to your unique requirements, backed by our commitment to ethical lending.
+                        Aruni can compare rates and conditions across the 8 major systematic banks in Sri Lanka to help you find the best personal loan.
                     </p>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-                    {loans.map((loan, index) => (
-                        <LoanCard key={index} {...loan} />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {banks.map((bank, index) => (
+                        <BankCard key={index} {...bank} />
                     ))}
+                </div>
+                <div className="mt-12 text-center text-sm text-gray-500">
+                    <p>* Rates are indicative as of 2025. Please ask Aruni for the latest details or confirm with the bank.</p>
                 </div>
             </div>
         </section>
     );
 };
 
-export default LoanSection;
+export default SupportedBanksSection;

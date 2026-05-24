@@ -2,8 +2,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 @theme {
-  --color-trust-blue: #1a365d;
-  --color-trust-gold: #d4af37;
+  --color-trust-blue: #0f172a;
+  --color-trust-gold: #10b981;
   --font-sans: 'Inter', system-ui, sans-serif;
 }
 

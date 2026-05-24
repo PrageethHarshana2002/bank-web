@@ -1,9 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ChatWindow from './ChatWindow';
 
 const ChatBubble: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
+
+    useEffect(() => {
+        const handleOpenChat = () => setIsOpen(true);
+        document.addEventListener('open-chat', handleOpenChat);
+        return () => {
+            document.removeEventListener('open-chat', handleOpenChat);
+        };
+    }, []);
 
     // For research project: Toggle typing animation occasionally to demonstrate
     const toggleTyping = () => setIsTyping(!isTyping);
