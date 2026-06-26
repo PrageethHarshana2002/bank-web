@@ -30,6 +30,21 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping }) => {
     const recognitionRef = useRef<any>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
+    const baseTextRef = useRef('');
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    const adjustHeight = () => {
+        const textarea = textareaRef.current;
+        if (textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
+        }
+    };
+
+    useEffect(() => {
+        adjustHeight();
+    }, [inputValue]);
+
     useEffect(() => {
         return () => {
             if (recognitionRef.current) {
@@ -80,6 +95,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping }) => {
 
     const handleSend = async () => {
         if (!inputValue.trim()) return;
+
+        if (isListening) {
+            recognitionRef.current?.stop();
+            setIsListening(false);
+        }
 
         const userMessage: Message = {
             id: Date.now().toString(),
@@ -154,9 +174,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping }) => {
                 return;
             }
 
+            baseTextRef.current = inputValue;
+
             const rec = new SpeechRecognition();
-            rec.continuous = false;
-            rec.interimResults = false;
+            rec.continuous = true;
+            rec.interimResults = true;
             
             let langCode = 'en-US';
             if (selectedLanguage === 'Sinhala') langCode = 'si-LK';
@@ -180,13 +202,25 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping }) => {
             };
 
             rec.onresult = (event: any) => {
-                const transcript = event.results[0][0].transcript;
-                if (transcript) {
-                    setInputValue(prev => {
-                        const trimmed = prev.trim();
-                        return trimmed ? `${trimmed} ${transcript}` : transcript;
-                    });
+                let interimTranscript = '';
+                let finalTranscript = '';
+
+                for (let i = 0; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
                 }
+
+                let newText = baseTextRef.current;
+                const speechPart = (finalTranscript + interimTranscript).trim();
+                
+                if (speechPart) {
+                    newText = newText.trim() ? `${newText.trim()} ${speechPart}` : speechPart;
+                }
+                
+                setInputValue(newText);
             };
 
             recognitionRef.current = rec;
@@ -346,29 +380,37 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping }) => {
                         onSubmit={(e) => { e.preventDefault(); handleSend(); setShowEmojiPicker(false); }}
                         className="p-4 bg-white border-t border-gray-100"
                     >
-                        <div className="relative flex items-center">
+                        <div className="relative flex items-end">
                             <button
                                 type="button"
                                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                                className="absolute left-2 p-2 text-gray-400 hover:text-trust-gold transition-colors z-10"
+                                className="absolute left-2 bottom-1.5 p-2 text-gray-400 hover:text-trust-gold transition-colors z-10"
                                 title="Add Emoji"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </button>
-                            <input
-                                type="text"
+                            <textarea
+                                ref={textareaRef}
                                 value={inputValue}
                                 onChange={(e) => setInputValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        handleSend();
+                                        setShowEmojiPicker(false);
+                                    }
+                                }}
                                 disabled={isLoading}
                                 placeholder={isListening ? "Listening..." : "Type your message..."}
-                                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-20 py-3 focus:outline-none focus:border-trust-gold focus:ring-1 focus:ring-trust-gold transition-all text-sm disabled:opacity-50"
+                                rows={1}
+                                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-20 py-2.5 focus:outline-none focus:border-trust-gold focus:ring-1 focus:ring-trust-gold transition-all text-sm disabled:opacity-50 resize-none overflow-y-auto min-h-[42px] max-h-[120px] leading-relaxed"
                             />
                             <button
                                 type="button"
                                 onClick={toggleListening}
-                                className={`absolute right-10 p-2 transition-colors ${
+                                className={`absolute right-10 bottom-1.5 p-2 transition-colors ${
                                     isListening 
                                         ? 'text-red-500 animate-pulse' 
                                         : 'text-gray-400 hover:text-trust-blue'
@@ -382,7 +424,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping }) => {
                             <button
                                 type="submit"
                                 disabled={isLoading || !inputValue.trim()}
-                                className="absolute right-2 p-2 text-trust-blue hover:text-trust-gold transition-colors disabled:opacity-50"
+                                className="absolute right-2 bottom-1.5 p-2 text-trust-blue hover:text-trust-gold transition-colors disabled:opacity-50"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
