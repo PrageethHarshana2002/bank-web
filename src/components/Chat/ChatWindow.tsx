@@ -58,7 +58,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping }) => {
             ? `ආයුබෝවන් ${userName}, මම අරුණි. අද ඔබට මගෙන් විය යුත්තේ කුමක්ද?`
             : lang === 'ta'
                 ? `வணக்கம் ${userName}, நான் அருணி. இன்று நான் உங்களுக்கு எப்படி உதவ முடியும்?`
-                : `Hello ${userName}! I'm Aruni. How can I assist you with your TrustBank loans today?`;
+                : `Hello ${userName}! I'm Aruni. How can I assist you with your personal loans today?`;
 
         setMessages([{
             id: '1',
@@ -139,9 +139,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping }) => {
             <div className="bg-trust-blue p-5 flex justify-between items-center">
                 <div className="flex items-center space-x-3">
                     <div className="relative">
-                        <div className="w-10 h-10 rounded-full bg-trust-gold flex items-center justify-center font-bold text-trust-blue">
-                            A
-                        </div>
+                        <img 
+                            src="/aruni.jpg" 
+                            alt="Aruni" 
+                            className="w-10 h-10 rounded-full object-cover border border-white/20"
+                        />
                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-trust-blue rounded-full"></div>
                     </div>
                     <div>
@@ -168,12 +170,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping }) => {
             <div className="flex-1 p-5 space-y-4 max-h-[400px] overflow-y-auto bg-gray-50/50 min-h-[300px] flex flex-col">
                 {onboardingStep === 'name' && (
                     <div className="flex-1 flex flex-col justify-center items-center text-center space-y-4 animate-in fade-in zoom-in-95 duration-300">
-                        <div className="w-16 h-16 bg-trust-gold/10 rounded-full flex items-center justify-center mb-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-trust-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                        </div>
-                        <h4 className="text-trust-blue font-bold text-lg">Welcome to TrustBank</h4>
+                        <img 
+                            src="/aruni.jpg" 
+                            alt="Advisor Aruni" 
+                            className="w-20 h-20 rounded-full object-cover shadow-md border-2 border-trust-gold/20 mb-2"
+                        />
+                        <h4 className="text-trust-blue font-bold text-lg">Welcome to Lanka Loan Advisor</h4>
                         <p className="text-sm text-gray-600">May I know your name to personalize your experience?</p>
                         <form onSubmit={handleOnboardingName} className="w-full space-y-3">
                             <input
@@ -225,8 +227,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping }) => {
                 {onboardingStep === 'completed' && (
                     <>
                         {messages.map((msg) => (
-                            <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[80%] p-3.5 rounded-2xl shadow-sm border ${msg.sender === 'user'
+                            <div key={msg.id} className={`flex items-end gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                {msg.sender === 'ai' && (
+                                    <img 
+                                        src="/aruni.jpg" 
+                                        alt="Aruni" 
+                                        className="w-8 h-8 rounded-full object-cover border border-gray-100 flex-shrink-0"
+                                    />
+                                )}
+                                <div className={`max-w-[78%] p-3.5 rounded-2xl shadow-sm border ${msg.sender === 'user'
                                     ? 'bg-trust-blue text-white rounded-tr-none border-trust-blue'
                                     : 'bg-white text-gray-800 rounded-tl-none border-gray-100'
                                     }`}>
@@ -250,7 +259,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping }) => {
                             </div>
                         ))}
                         {(isLoading || isTyping) && (
-                            <div className="flex justify-start">
+                            <div className="flex items-end gap-2 justify-start">
+                                <img 
+                                    src="/aruni.jpg" 
+                                    alt="Aruni" 
+                                    className="w-8 h-8 rounded-full object-cover border border-gray-100 flex-shrink-0"
+                                />
                                 <TypingAnimation isVisible={true} />
                             </div>
                         )}
