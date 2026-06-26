@@ -26,7 +26,17 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping }) => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const [isListening, setIsListening] = useState(false);
+    const recognitionRef = useRef<any>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        return () => {
+            if (recognitionRef.current) {
+                recognitionRef.current.stop();
+            }
+        };
+    }, []);
 
     const onEmojiClick = (emojiObject: any) => {
         setInputValue(prevInput => prevInput + emojiObject.emoji);
@@ -130,6 +140,57 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping }) => {
             setMessages(prev => [...prev, aiMessage]);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const toggleListening = () => {
+        if (isListening) {
+            recognitionRef.current?.stop();
+            setIsListening(false);
+        } else {
+            const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Speech recognition is not supported in this browser. Please use Google Chrome or Microsoft Edge.");
+                return;
+            }
+
+            const rec = new SpeechRecognition();
+            rec.continuous = false;
+            rec.interimResults = false;
+            
+            let langCode = 'en-US';
+            if (selectedLanguage === 'Sinhala') langCode = 'si-LK';
+            else if (selectedLanguage === 'Tamil') langCode = 'ta-LK';
+            rec.lang = langCode;
+
+            rec.onstart = () => {
+                setIsListening(true);
+            };
+
+            rec.onend = () => {
+                setIsListening(false);
+            };
+
+            rec.onerror = (event: any) => {
+                console.error("Speech recognition error:", event.error);
+                setIsListening(false);
+                if (event.error === 'not-allowed') {
+                    alert("Microphone access blocked. Please enable microphone permissions in your browser settings.");
+                }
+            };
+
+            rec.onresult = (event: any) => {
+                const transcript = event.results[0][0].transcript;
+                if (transcript) {
+                    setInputValue(prev => {
+                        const trimmed = prev.trim();
+                        return trimmed ? `${trimmed} ${transcript}` : transcript;
+                    });
+                }
+            };
+
+            recognitionRef.current = rec;
+            rec.start();
         }
     };
 
@@ -301,9 +362,23 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping }) => {
                                 value={inputValue}
                                 onChange={(e) => setInputValue(e.target.value)}
                                 disabled={isLoading}
-                                placeholder="Type your message..."
-                                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-12 py-3 focus:outline-none focus:border-trust-gold focus:ring-1 focus:ring-trust-gold transition-all text-sm disabled:opacity-50"
+                                placeholder={isListening ? "Listening..." : "Type your message..."}
+                                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-20 py-3 focus:outline-none focus:border-trust-gold focus:ring-1 focus:ring-trust-gold transition-all text-sm disabled:opacity-50"
                             />
+                            <button
+                                type="button"
+                                onClick={toggleListening}
+                                className={`absolute right-10 p-2 transition-colors ${
+                                    isListening 
+                                        ? 'text-red-500 animate-pulse' 
+                                        : 'text-gray-400 hover:text-trust-blue'
+                                }`}
+                                title={isListening ? "Listening... Click to stop" : "Voice Input"}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                                </svg>
+                            </button>
                             <button
                                 type="submit"
                                 disabled={isLoading || !inputValue.trim()}
