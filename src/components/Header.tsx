@@ -11,13 +11,17 @@ const Header: React.FC = () => {
                         </span>
                     </div>
                     <nav className="hidden md:flex space-x-10">
-                        <a href="#" className="text-base font-medium text-gray-600 hover:text-trust-blue transition-colors">Home</a>
-                        <a href="#" className="text-base font-medium text-gray-600 hover:text-trust-blue transition-colors">Supported Banks</a>
-                        <a href="#" className="text-base font-medium text-gray-600 hover:text-trust-blue transition-colors">How It Works</a>
+                        <a href="#home" className="text-base font-medium text-gray-600 hover:text-trust-blue transition-colors">Home</a>
+                        <a href="#chatbot" className="text-base font-medium text-gray-600 hover:text-trust-blue transition-colors">Chatbot</a>
+                        <a href="#how-it-works" className="text-base font-medium text-gray-600 hover:text-trust-blue transition-colors">How It Works</a>
+                        <a href="#feedback" className="text-base font-medium text-gray-600 hover:text-trust-blue transition-colors">Feedback</a>
                     </nav>
                     <div className="flex items-center space-x-4">
-                        <button className="bg-trust-blue text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-md">
-                            Get Advice
+                        <button
+                            onClick={() => document.dispatchEvent(new CustomEvent('open-chat'))}
+                            className="bg-trust-blue text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-md"
+                        >
+                            Try Chatbot
                         </button>
                     </div>
                 </div>

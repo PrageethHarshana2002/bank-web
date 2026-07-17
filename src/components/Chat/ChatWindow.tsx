@@ -29,6 +29,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping }) => {
     const [isListening, setIsListening] = useState(false);
     const recognitionRef = useRef<any>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const latestAiMessageRef = useRef<HTMLDivElement>(null);
 
     const baseTextRef = useRef('');
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -62,8 +63,24 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping }) => {
     };
 
     useEffect(() => {
-        scrollToBottom();
-    }, [messages, isLoading, isTyping, onboardingStep]);
+        if (onboardingStep !== 'completed') {
+            scrollToBottom();
+            return;
+        }
+
+        const latestMessage = messages[messages.length - 1];
+        if (latestMessage?.sender === 'ai') {
+            latestAiMessageRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else {
+            scrollToBottom();
+        }
+    }, [messages, onboardingStep]);
+
+    useEffect(() => {
+        if (isLoading || isTyping) {
+            scrollToBottom();
+        }
+    }, [isLoading, isTyping]);
 
     const handleOnboardingName = (e: React.FormEvent) => {
         e.preventDefault();
@@ -239,12 +256,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping }) => {
                             alt="Aruni" 
                             className="w-10 h-10 rounded-full object-cover border border-white/20"
                         />
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-trust-blue rounded-full"></div>
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-trust-gold border-2 border-trust-blue rounded-full"></div>
                     </div>
                     <div>
                         <h3 className="text-white font-bold leading-tight">Advisor Aruni</h3>
                         <span className="text-blue-100 text-xs flex items-center">
-                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 animate-pulse"></span>
+                            <span className="w-1.5 h-1.5 bg-trust-gold rounded-full mr-1.5 animate-pulse"></span>
                             Online
                         </span>
                     </div>
@@ -321,8 +338,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping }) => {
 
                 {onboardingStep === 'completed' && (
                     <>
-                        {messages.map((msg) => (
-                            <div key={msg.id} className={`flex items-end gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        {messages.map((msg, index) => (
+                            <div
+                                key={msg.id}
+                                ref={msg.sender === 'ai' && index === messages.length - 1 ? latestAiMessageRef : undefined}
+                                className={`flex items-end gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                            >
                                 {msg.sender === 'ai' && (
                                     <img 
                                         src="/aruni.jpg" 

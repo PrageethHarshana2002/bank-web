@@ -21,6 +21,7 @@ dist-ssr
 server/check_pinecone.js
 server/debug_rag.js
 server/find_768.js
+server/scratch_test.js
 server/list_models.js
 server/list_models_v1.js
 server/test_conn.js

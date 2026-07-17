@@ -7,8 +7,8 @@ export default {
   theme: {
     extend: {
       colors: {
-        'trust-blue': '#1a365d',
-        'trust-gold': '#d4af37',
+        'trust-blue': '#071b3f',
+        'trust-gold': '#0b63d8',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
