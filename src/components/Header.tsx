@@ -14,7 +14,7 @@ const Header: React.FC = () => {
                         <a href="#home" className="text-base font-medium text-gray-600 hover:text-trust-blue transition-colors">Home</a>
                         <a href="#chatbot" className="text-base font-medium text-gray-600 hover:text-trust-blue transition-colors">Chatbot</a>
                         <a href="#how-it-works" className="text-base font-medium text-gray-600 hover:text-trust-blue transition-colors">How It Works</a>
-                        <a href="#feedback" className="text-base font-medium text-gray-600 hover:text-trust-blue transition-colors">Feedback</a>
+                        <a href="https://docs.google.com/forms/u/0/d/e/1FAIpQLSeKjKjJUPYBj97yQj4PuPpfpG5TK2_YbL5qrTs83pS4BX6CPg/formResponse" target="_blank" rel="noreferrer" className="text-base font-medium text-gray-600 hover:text-trust-blue transition-colors">Feedback</a>
                     </nav>
                     <div className="flex items-center space-x-4">
                         <button

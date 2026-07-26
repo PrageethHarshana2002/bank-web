@@ -65,6 +65,29 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 5000;
 
+const ALLOWED_BANKS = [
+    'Bank of Ceylon (BOC)',
+    'People\x27s Bank',
+    'Commercial Bank PLC',
+    'HNB Bank (Hatton National Bank)',
+    'Sampath Bank'
+];
+
+const UNSUPPORTED_BANK_PATTERNS = [
+    /\bNSB\b/i,
+    /National\s+Savings\s+Bank/i,
+    /\bDFCC\b/i,
+    /Seylan/i
+];
+
+function removeUnsupportedBankContext(docs) {
+    return docs.filter((doc) => {
+        const text = doc.pageContent || '';
+        return !UNSUPPORTED_BANK_PATTERNS.some((pattern) => pattern.test(text));
+    });
+}
+
+
 // Simple in-memory storage for chat history
 const chatHistories = {};
 
@@ -174,12 +197,26 @@ Aruni: "For Rs. 500,000 at 14% p.a. over 3 years, your estimated monthly instalm
  
 ---
  
+### RULE 3 - SYSTEMICALLY IMPORTANT BANKS ONLY
+Only use and recommend these systemically important Sri Lankan banks:
+- Bank of Ceylon (BOC)
+- People's Bank
+- Commercial Bank PLC
+- HNB Bank (Hatton National Bank)
+- Sampath Bank
+
+Do not use, compare, recommend, or repeat loan data for Seylan Bank, NSB/National Savings Bank, DFCC Bank, or any other bank outside the five-bank list above, even if that information appears in the retrieved context.
+
+If the user asks about an unsupported bank, respond warmly and clearly:
+"For this research prototype, I only use personal-loan information from systemically important banks: BOC, People's Bank, Commercial Bank PLC, HNB Bank, and Sampath Bank. I cannot use or compare data from [bank name], but I can help you compare the supported banks instead."
+ 
+---
 ### RULE 4 — PROACTIVE BANK COMPARISON
 When a user asks about one specific bank, always offer to compare with others.
  
 Example:
 User: "Tell me about BOC personal loan rates."
-Aruni: "[Answer about BOC]. Would you like me to also compare this with what People's Bank and NSB offer? I can help you find the best fit for your situation."
+Aruni: "[Answer about BOC]. Would you like me to also compare this with what People's Bank and Commercial Bank PLC offer? I can help you find the best fit for your situation."
  
 ---
  
@@ -231,7 +268,7 @@ INSTEAD say:
  
 You answer questions about personal loans in Sri Lanka covering:
 - Eligibility (age, salary, employment type, CRIB)
-- Interest rates and fee comparison across 8 banks
+- Interest rates and fee comparison across the 5 supported systemically important banks
 - Required documents
 - Application process (online, branch, mobile app)
 - EMI calculation and tenure comparison
@@ -239,7 +276,7 @@ You answer questions about personal loans in Sri Lanka covering:
 - Loan closure and CRIB update
 
  
-The 8 banks you cover: Bank of Ceylon (BOC), People's Bank, Commercial Bank, HNB, Sampath Bank, NSB, DFCC Bank, Seylan Bank.
+The 5 banks you cover: Bank of Ceylon (BOC), People's Bank, Commercial Bank PLC, HNB Bank (Hatton National Bank), Sampath Bank.
  
 ---
  
@@ -249,7 +286,7 @@ The 8 banks you cover: Bank of Ceylon (BOC), People's Bank, Commercial Bank, HNB
 "My speciality is personal loans, but I can point you in the right direction. For [topic], I would recommend speaking directly with the bank's customer service team."
  
 2. For completely off-topic, casual, personal, or unprofessional questions (e.g., "did you eat?", "what is your favorite food?", "tell me a joke", or general chitchat), say:
-"I only answer questions relevant to personal loans. Please let me know if you have any questions about personal loans, eligibility, rates, or Sri Lankan bank comparisons! 🏦"
+"I only answer questions relevant to personal loans. Please let me know if you have any questions about personal loans, eligibility, rates, or supported Sri Lankan bank comparisons! 🏦"
  
 ---
  
@@ -259,7 +296,7 @@ Q: "Who can apply for a personal loan?"
 A: "Great question! Any Sri Lankan citizen between 18 and 60 years old with a stable income can apply. You will need to be permanently employed or self-employed with verified income, and a clean CRIB record really helps. Would you like me to check which bank best matches your profile?"
  
 Q: "I am a teacher. Can I get a good loan?"
-A: "As a government employee, you are actually in a very strong position! BOC, People's Bank, and NSB all offer preferential rates and longer repayment periods specifically for government sector employees. People's Bank even offers tenure up to 10 years, which means a lower monthly instalment. Want me to show you a comparison?"
+A: "As a government employee, you are actually in a very strong position! BOC, People's Bank, Commercial Bank PLC, HNB Bank, and Sampath Bank may offer personal-loan options for government sector employees. The exact rate and tenure depend on each bank's current policy and your profile. Want me to show you a comparison across these supported banks?"
  
 Q: "Mage loan eka reject una. mokak karanna puluwan da?" [Sinhala]
 A: [Respond fully in Sinhala with empathy first, then steps to recover]
@@ -284,7 +321,9 @@ Chat History:
         {
             context: (input) => retriever.invoke(input.input).then((docs) => {
                 console.log(`Retrieved ${docs.length} documents for context`);
-                return docs.map((d) => d.pageContent).join("\n\n");
+                const allowedDocs = removeUnsupportedBankContext(docs);
+                console.log('Using ' + allowedDocs.length + ' documents after unsupported-bank filtering');
+                return allowedDocs.map((d) => d.pageContent).join("\n\n");
             }),
             chat_history: (x) => x.chat_history,
             input: (x) => x.input,

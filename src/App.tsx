@@ -2,9 +2,10 @@ import React from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import LoanSection from './components/LoanSection';
+import VisualEvidenceSection from './components/VisualEvidenceSection';
 import ChatBubble from './components/Chat/ChatBubble';
 
-const feedbackFormUrl = '#feedback';
+const feedbackFormUrl = 'https://docs.google.com/forms/u/0/d/e/1FAIpQLSeKjKjJUPYBj97yQj4PuPpfpG5TK2_YbL5qrTs83pS4BX6CPg/formResponse';
 
 const App: React.FC = () => {
   const howItWorks = [
@@ -35,10 +36,10 @@ const App: React.FC = () => {
       <main>
         <Hero />
 
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-white scroll-fade">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
-              <div className="lg:col-span-2">
+              <div className="lg:col-span-2 fade-card">
                 <span className="text-sm font-bold uppercase tracking-wide text-trust-gold">Research Participation</span>
                 <h2 className="mt-3 text-3xl font-bold text-trust-blue sm:text-4xl">Help us evaluate a human-like banking chatbot</h2>
                 <p className="mt-5 text-lg text-gray-600 leading-relaxed">
@@ -52,14 +53,14 @@ const App: React.FC = () => {
                     Use the Chatbot
                   </button>
                   <a
-                    href="#feedback"
+                    href={feedbackFormUrl} target="_blank" rel="noreferrer"
                     className="inline-flex justify-center rounded-lg border border-trust-blue px-6 py-3 font-semibold text-trust-blue hover:bg-gray-50 transition-all"
                   >
-                    Open Feedback Section
+                    Open Feedback Form
                   </a>
                 </div>
               </div>
-              <div className="bg-gray-50 rounded-2xl border border-gray-100 p-6">
+              <div className="bg-gray-50 rounded-2xl border border-gray-100 p-6 fade-card delay-100">
                 <h3 className="font-bold text-trust-blue text-lg">Study Focus</h3>
                 <ul className="mt-4 space-y-3">
                   {researchFocus.map((item) => (
@@ -74,9 +75,9 @@ const App: React.FC = () => {
           </div>
         </section>
 
-        <section id="how-it-works" className="py-20 bg-trust-blue text-white">
+        <section id="how-it-works" className="py-20 bg-trust-blue text-white scroll-fade">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-3xl">
+            <div className="max-w-3xl fade-card">
               <span className="text-sm font-bold uppercase tracking-wide text-trust-gold">How It Works</span>
               <h2 className="mt-3 text-3xl font-bold sm:text-4xl">A simple three-step research flow</h2>
               <p className="mt-4 text-blue-100 text-lg">
@@ -85,7 +86,7 @@ const App: React.FC = () => {
             </div>
             <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
               {howItWorks.map((step, index) => (
-                <div key={step.title} className="rounded-2xl border border-white/10 bg-white/5 p-6">
+                <div key={step.title} className="rounded-2xl border border-white/10 bg-white/5 p-6 fade-card">
                   <div className="text-trust-gold text-4xl font-bold mb-4">{index + 1}</div>
                   <h3 className="text-xl font-bold">{step.title}</h3>
                   <p className="mt-3 text-blue-100 leading-relaxed">{step.description}</p>
@@ -97,9 +98,11 @@ const App: React.FC = () => {
 
         <LoanSection />
 
-        <section id="feedback" className="py-20 bg-white">
+        <VisualEvidenceSection />
+
+        <section id="feedback" className="py-20 bg-white scroll-fade">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="rounded-2xl bg-gray-50 border border-gray-100 p-8 md:p-10 flex flex-col lg:flex-row gap-8 justify-between items-start lg:items-center">
+            <div className="rounded-2xl bg-gray-50 border border-gray-100 p-8 md:p-10 flex flex-col lg:flex-row gap-8 justify-between items-start lg:items-center fade-card">
               <div className="max-w-2xl">
                 <span className="text-sm font-bold uppercase tracking-wide text-trust-gold">Research Feedback Form</span>
                 <h2 className="mt-3 text-3xl font-bold text-trust-blue">Share your experience after using Aruni</h2>
@@ -112,6 +115,8 @@ const App: React.FC = () => {
               </div>
               <a
                 href={feedbackFormUrl}
+                target="_blank"
+                rel="noreferrer"
                 className="inline-flex justify-center rounded-lg bg-trust-gold px-8 py-4 font-bold text-white shadow-lg hover:bg-opacity-90 transition-all"
               >
                 Open Feedback Form
@@ -120,9 +125,9 @@ const App: React.FC = () => {
           </div>
         </section>
 
-        <section id="contact" className="py-20 bg-gray-50">
+        <section id="contact" className="py-20 bg-gray-50 scroll-fade">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            <div className="max-w-3xl fade-card">
               <div>
                 <span className="text-sm font-bold uppercase tracking-wide text-trust-gold">About the Research</span>
                 <h2 className="mt-3 text-3xl font-bold text-trust-blue">Research brief</h2>
@@ -133,17 +138,9 @@ const App: React.FC = () => {
                   The expected contribution is an integrated model linking perceived human-likeness, warmth, competence, trust, digital literacy, and brand credibility within AI-enabled banking services.
                 </p>
               </div>
-              <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-                <h3 className="text-xl font-bold text-trust-blue">Contact Details</h3>
-                <div className="mt-5 space-y-4 text-gray-600">
-                  <p><span className="font-semibold text-trust-blue">Researcher:</span> Add researcher name</p>
-                  <p><span className="font-semibold text-trust-blue">Email:</span> add-email@example.com</p>
-                  <p><span className="font-semibold text-trust-blue">Phone:</span> +94 XX XXX XXXX</p>
-                  <p><span className="font-semibold text-trust-blue">Institution:</span> Add university or institute name</p>
-                </div>
+
               </div>
             </div>
-          </div>
         </section>
       </main>
 

@@ -28,7 +28,7 @@ const Hero: React.FC = () => {
                                 </div>
                                 <div className="mt-3 sm:mt-0 sm:ml-3">
                                     <a
-                                        href="#feedback"
+                                        href="https://docs.google.com/forms/u/0/d/e/1FAIpQLSeKjKjJUPYBj97yQj4PuPpfpG5TK2_YbL5qrTs83pS4BX6CPg/formResponse" target="_blank" rel="noreferrer"
                                         className="w-full flex items-center justify-center px-8 py-3 border border-trust-blue text-base font-medium rounded-md text-trust-blue bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10 transition-all font-semibold"
                                     >
                                         Give Feedback
