@@ -129,6 +129,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping }) => {
         setInputValue('');
         setIsLoading(true);
 
+        // Create an empty AI message placeholder that we'll fill in as chunks arrive
+        const aiMessageId = (Date.now() + 1).toString();
+        const aiTimestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
         try {
             const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:5000';
             const response = await fetch(`${backendUrl}/chat`, {
@@ -141,40 +145,114 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose, isTyping }) => {
                 body: JSON.stringify({ message: userMessage.text }),
             });
 
-            if (!response.ok) {
+            if (!response.ok || !response.body) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.error || `Server returned ${response.status}`);
             }
 
-            const data = await response.json();
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let isFirstChunk = true;
 
-            const aiMessage: Message = {
-                id: (Date.now() + 1).toString(),
-                text: data.response,
-                sender: 'ai',
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            };
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
 
-            setMessages(prev => [...prev, aiMessage]);
+                buffer += decoder.decode(value, { stream: true });
+
+                // SSE events are separated by double newlines
+                const parts = buffer.split('\n\n');
+                buffer = parts.pop() ?? ''; // Last part may be incomplete — keep in buffer
+
+                for (const part of parts) {
+                    const line = part.trim();
+                    if (!line.startsWith('data:')) continue;
+
+                    const payload = line.slice(5).trim(); // Strip "data: " prefix
+
+                    if (payload === '[DONE]') {
+                        // Stream is complete — nothing more to do
+                        break;
+                    }
+
+                    try {
+                        const parsed = JSON.parse(payload);
+
+                        if (parsed.error) {
+                            if (isFirstChunk) {
+                                isFirstChunk = false;
+                                setIsLoading(false);
+                                setMessages(prev => [...prev, {
+                                    id: aiMessageId,
+                                    text: parsed.error,
+                                    sender: 'ai',
+                                    timestamp: aiTimestamp,
+                                }]);
+                            } else {
+                                setMessages(prev => prev.map(msg =>
+                                    msg.id === aiMessageId
+                                        ? { ...msg, text: parsed.error }
+                                        : msg
+                                ));
+                            }
+                            return;
+                        }
+
+                        if (parsed.chunk) {
+                            if (isFirstChunk) {
+                                isFirstChunk = false;
+                                setIsLoading(false);
+                                setMessages(prev => [...prev, {
+                                    id: aiMessageId,
+                                    text: parsed.chunk,
+                                    sender: 'ai',
+                                    timestamp: aiTimestamp,
+                                }]);
+                            } else {
+                                // Append the new token to the AI message in-place
+                                setMessages(prev => prev.map(msg =>
+                                    msg.id === aiMessageId
+                                        ? { ...msg, text: msg.text + parsed.chunk }
+                                        : msg
+                                ));
+                            }
+                        }
+                    } catch {
+                        // Ignore malformed JSON lines
+                    }
+                }
+            }
+
         } catch (error: any) {
             console.error("Detailed Chat Error:", error);
-            
+            setIsLoading(false);
+
             let userFriendlyMessage = "I'm sorry, I'm experiencing a temporary connection issue. Please try again in a moment. 🔌";
-            
-            // Check if it's a quota/rate limit error
+
             if (error.message && (error.message.includes("limit") || error.message.includes("429") || error.message.includes("Quota"))) {
                 userFriendlyMessage = "I'm experiencing a bit of high traffic right now and need a short break. Please try asking me again in a minute! ⏳";
             } else if (error.message && error.message.includes("503")) {
                 userFriendlyMessage = "I am still waking up! Please give me a few seconds and try again. 🌅";
             }
 
-            const aiMessage: Message = {
-                id: (Date.now() + 1).toString(),
-                text: userFriendlyMessage,
-                sender: 'ai',
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            };
-            setMessages(prev => [...prev, aiMessage]);
+            // If placeholder was already added, update it; otherwise add a new error message
+            setMessages(prev => {
+                const hasPlaceholder = prev.some(m => m.id === aiMessageId);
+                if (hasPlaceholder) {
+                    return prev.map(msg =>
+                        msg.id === aiMessageId
+                            ? { ...msg, text: userFriendlyMessage }
+                            : msg
+                    );
+                }
+                return [...prev, {
+                    id: aiMessageId,
+                    text: userFriendlyMessage,
+                    sender: 'ai',
+                    timestamp: aiTimestamp,
+                }];
+            });
         } finally {
             setIsLoading(false);
         }

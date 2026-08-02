@@ -5,7 +5,7 @@ import LoanSection from './components/LoanSection';
 import VisualEvidenceSection from './components/VisualEvidenceSection';
 import ChatBubble from './components/Chat/ChatBubble';
 
-const feedbackFormUrl = 'https://docs.google.com/forms/u/0/d/e/1FAIpQLSeKjKjJUPYBj97yQj4PuPpfpG5TK2_YbL5qrTs83pS4BX6CPg/formResponse';
+const feedbackFormUrl = 'https://docs.google.com/forms/d/e/1FAIpQLScziVUBFIktbK_aZoYRGixiyB4OfRmOmbXfMdvfR21yUkCiQA/viewform?usp=header';
 
 const App: React.FC = () => {
   const howItWorks = [

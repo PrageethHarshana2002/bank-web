@@ -348,7 +348,6 @@ initRAG().then(chain => {
 });
 
 app.post('/chat', async (req, res) => {
-    // For simplicity, using 'default' session. In production, use session IDs from headers/cookies.
     const sessionId = req.headers['x-session-id'] || 'default-session';
     const userName = req.headers['x-user-name'] || 'Customer';
     const preferredLanguage = req.headers['x-preferred-language'] || 'English';
@@ -365,24 +364,42 @@ app.post('/chat', async (req, res) => {
         chatHistories[sessionId] = { shortTerm: [], longTerm: [] };
     }
 
+    // Set SSE headers so the browser can read chunks as they arrive
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no'); // Disable nginx buffering if behind a proxy
+    res.flushHeaders();
+
+    let fullResponse = '';
+
     try {
         // Format history for prompt
         const historyString = chatHistories[sessionId].shortTerm
             .map(m => `${m.sender}: ${m.text}`)
             .join("\n");
 
-        const response = await ragChain.invoke({
+        // Stream tokens from the chain as they are generated
+        const stream = await ragChain.stream({
             input: message,
             chat_history: historyString,
             user_name: userName,
             preferred_language: preferredLanguage
         });
 
-        console.log("Chain invoked successfully");
+        for await (const chunk of stream) {
+            if (chunk && typeof chunk === 'string' && chunk.length > 0) {
+                fullResponse += chunk;
+                // Send each token chunk as an SSE event
+                res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
+            }
+        }
 
-        // Update history (keep last 20 messages: 10 user + 10 AI for shortTerm)
+        console.log("Stream completed successfully");
+
+        // Save the fully assembled response to chat history
         const userMsg = { sender: 'User', text: message };
-        const aruniMsg = { sender: 'Aruni', text: response };
+        const aruniMsg = { sender: 'Aruni', text: fullResponse };
 
         chatHistories[sessionId].shortTerm.push(userMsg, aruniMsg);
         chatHistories[sessionId].longTerm.push(userMsg, aruniMsg);
@@ -391,22 +408,25 @@ app.post('/chat', async (req, res) => {
             chatHistories[sessionId].shortTerm = chatHistories[sessionId].shortTerm.slice(-20);
         }
 
-        res.json({ response });
+        // Signal to the frontend that the stream is finished
+        res.write(`data: [DONE]\n\n`);
+        res.end();
+
     } catch (error) {
-        console.error("Chat error details:", {
+        console.error("Chat stream error:", {
             message: error.message,
             stack: error.stack,
             status: error.status,
-            statusText: error.statusText
         });
 
-        if (error.status === 429 || error.message.includes("429")) {
-            return res.status(429).json({
-                error: "Aruni's brain is hitting a Google Free Tier limit. This is a temporary daily cap. Please try again in 1 minute, or switch to a different API key if you have one."
-            });
-        }
+        const isRateLimit = error.status === 429 || error.message?.includes("429");
+        const errorMsg = isRateLimit
+            ? "Aruni's brain is hitting a Google Free Tier limit. This is a temporary daily cap. Please try again in 1 minute, or switch to a different API key if you have one."
+            : `Internal Server Error: ${error.message}`;
 
-        res.status(500).json({ error: `Internal Server Error: ${error.message}` });
+        // Send the error as an SSE event so the frontend can display it gracefully
+        res.write(`data: ${JSON.stringify({ error: errorMsg })}\n\n`);
+        res.end();
     }
 });
 app.post('/end-session', async (req, res) => {
